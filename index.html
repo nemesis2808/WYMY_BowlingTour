@@ -1,0 +1,480 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bowling Strike Registration</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: poster fills the page as a dimmed backdrop; a crisp poster hero sits on top, then glass panels for login > pick group > team form, with roster and admin tabs. */
+:root{
+  --ink:#050a26; --panel:rgba(7,13,48,.84); --panel-2:rgba(18,30,92,.7); --line:rgba(120,170,255,.28);
+  --fg:#f2f6ff; --muted:#a9b9e8; --blue:#2f6bff; --cyan:#27e1ff; --lime:#c8ff2e; --pink:#ff3fa4; --bad:#ff6b7a; --ok:#47f08a;
+  --display:"Bowlby One","Arial Black",Impact,sans-serif; --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  --poster:url(poster.jpg);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--ink);color:var(--fg);font:500 15px/1.5 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px;position:relative;margin:0}
+body::before{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(5,10,38,.55),rgba(5,10,38,.9)),var(--poster) center/cover no-repeat;filter:blur(5px) saturate(1.2);transform:scale(1.04);z-index:-1}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.01em}
+h2{font-size:clamp(20px,3.4vw,28px)} h3{font-size:17px}
+.hero{border-radius:20px;overflow:hidden;border:2px solid var(--line);box-shadow:0 0 40px rgba(47,107,255,.35);background:var(--poster) center/cover no-repeat;aspect-ratio:1535/1024;width:100%}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.fact{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-width:0}
+.fact small{display:block;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:800}
+.fact b{font-size:16px;color:var(--lime)}
+nav.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{font:800 14px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);padding:9px 16px;border-radius:999px;cursor:pointer}
+.tab[aria-selected=true]{background:var(--lime);color:#06104a;border-color:var(--lime);box-shadow:0 0 18px rgba(200,255,46,.5)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:clamp(16px,3vw,28px);backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:16px;min-width:0}
+.steps{display:flex;gap:6px;flex-wrap:wrap;font:800 12px var(--body);letter-spacing:.08em;text-transform:uppercase}
+.steps span{padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.steps .on{background:var(--cyan);color:#041040;border-color:var(--cyan)}
+.steps .done{color:var(--lime);border-color:var(--lime)}
+label{display:block;font-weight:800;font-size:13px;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;font:600 15px var(--body);color:var(--fg);background:rgba(2,6,30,.8);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+input:focus,select:focus,button:focus-visible,.gcard:focus-visible,.tab:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+input[readonly]{opacity:.75;background:rgba(47,107,255,.18)}
+.bad{border-color:var(--bad)!important}
+.err{color:var(--bad);font-size:12.5px;font-weight:700;min-height:0;margin-top:3px}
+.btn{font:800 16px var(--body);border:0;border-radius:12px;padding:12px 22px;cursor:pointer;background:linear-gradient(180deg,#d9ff5a,var(--lime));color:#06104a;box-shadow:0 4px 0 #6f9b00,0 0 20px rgba(200,255,46,.35)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #6f9b00}
+.btn.ghost{background:transparent;color:var(--fg);border:1.5px solid var(--line);box-shadow:none}
+.btn.danger{background:var(--bad);color:#2a0008;box-shadow:none}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.login{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+@media(max-width:520px){.login{grid-template-columns:1fr}}
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.gcard{text-align:left;font:inherit;color:inherit;cursor:pointer;background:var(--panel-2);border:2px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;transition:transform .15s,border-color .15s}
+.gcard:hover:not([disabled]){transform:translateY(-3px);border-color:var(--cyan)}
+.gcard[aria-pressed=true]{border-color:var(--lime);box-shadow:0 0 22px rgba(200,255,46,.45)}
+.gcard[disabled]{opacity:.5;cursor:not-allowed}
+.gcard .num{font:400 38px/1 var(--display);color:var(--cyan);font-variant-numeric:tabular-nums}
+.gcard .num small{font-size:16px;color:var(--muted)}
+.meter{height:10px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan),var(--lime));border-radius:99px;transition:width .4s}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font:800 12px var(--body);background:rgba(71,240,138,.18);color:var(--ok)}
+.pill.full{background:rgba(255,107,122,.2);color:var(--bad)}
+.members{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.mcard{background:var(--panel-2);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}
+.mcard h3{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mcard .full{grid-column:1/-1}
+.mcard>div{min-width:0}
+.tally{display:flex;gap:10px;flex-wrap:wrap}
+.chip{padding:6px 14px;border-radius:99px;font:800 14px var(--body);background:rgba(255,255,255,.1);border:1.5px solid var(--line);font-variant-numeric:tabular-nums}
+.chip.ok{border-color:var(--ok);color:var(--ok)}
+.chip.over{border-color:var(--bad);color:var(--bad)}
+.alert{border-radius:12px;padding:12px 16px;font-weight:700;border:1.5px solid var(--bad);background:rgba(255,107,122,.14)}
+.alert ul{margin:6px 0 0;padding-left:20px;font-weight:600}
+.alert.good{border-color:var(--ok);background:rgba(71,240,138,.12)}
+.alert.warn{border-color:var(--lime);background:rgba(200,255,46,.1)}
+.tablewrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid rgba(120,170,255,.16);white-space:nowrap}
+th{background:rgba(47,107,255,.35);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;position:sticky;top:0}
+tr.teamstart td{border-top:2px solid var(--line)}
+td.tn{color:var(--lime);font-weight:800}
+.g-M{color:var(--cyan)} .g-F{color:var(--pink)}
+.ticket{border:2px dashed var(--lime);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:6px;background:rgba(200,255,46,.07)}
+.ticket .tid{font:400 44px/1 var(--display);color:var(--lime)}
+.hint{color:var(--muted);font-size:13px}
+.loading{color:var(--muted)}
+[hidden]{display:none!important}
+@media(max-width:480px){.mcard{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+
+<div class="wrap">
+  <div class="hero" role="img" aria-label="Bowling Strike Tournament 2026 poster, Soft Launch Event"></div>
+  <div class="facts">
+    <div class="fact"><small>Venue</small><b>Daiman Bowl, Taman Johor Jaya</b></div>
+    <div class="fact"><small>Event date</small><b>13 Dec 2026</b></div>
+    <div class="fact"><small>Registration closes</small><b id="deadline">10 Dec 2026</b> <span class="hint" id="countdown"></span></div>
+  </div>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-reg" aria-selected="true">Register</button>
+    <button class="tab" role="tab" id="tab-roster" aria-selected="false">Teams and members</button>
+    <button class="tab" role="tab" id="tab-admin" aria-selected="false">Admin</button>
+  </nav>
+
+  <div id="dbwarn" class="alert warn" hidden></div>
+
+  <!-- REGISTER -->
+  <section id="v-reg" class="panel">
+    <div class="steps" id="steps"></div>
+
+    <div id="s-login">
+      <h2>Log in to register</h2>
+      <p class="hint">Use your Badge ID. Each Badge ID can register one team only.</p>
+      <form id="loginForm" class="login" novalidate>
+        <div><label for="loginId">Badge ID</label><input id="loginId" autocomplete="off" placeholder="e.g. W012345" required><div class="err" id="loginErr"></div></div>
+        <button class="btn" type="submit" id="loginBtn">Log in</button>
+      </form>
+    </div>
+
+    <div id="s-blocked" hidden></div>
+
+    <div id="s-group" hidden>
+      <div class="row" style="justify-content:space-between"><h2>Choose your group</h2><span class="hint" id="whoami"></span></div>
+      <div class="row"><b style="font-variant-numeric:tabular-nums" id="totalTxt"></b><div class="meter" style="flex:1;min-width:120px"><i id="totalBar"></i></div></div>
+      <div id="totalFull" class="alert" hidden>All 34 team slots are taken. Registration is full.</div>
+      <div class="groups" id="groups"></div>
+      <div id="groupErr" class="err"></div>
+      <div class="row"><button class="btn" id="toForm" disabled>Continue to team details</button><button class="btn ghost" id="logout">Log out</button></div>
+    </div>
+
+    <div id="s-form" hidden>
+      <div class="row" style="justify-content:space-between"><h2 id="formTitle">Team details</h2><button class="btn ghost" id="backGroup" type="button">Change group</button></div>
+      <p class="hint" id="slotInfo"></p>
+      <div id="errBox" class="alert" hidden></div>
+      <form id="teamForm" novalidate>
+        <div style="max-width:420px;margin-bottom:14px"><label for="teamName">Team name (mandatory)</label><input id="teamName" maxlength="30" placeholder="e.g. Pin Busters"><div class="err" id="teamNameErr"></div></div>
+        <div class="tally" style="margin-bottom:14px"><span class="chip" id="chipM">Male 0 / 3</span><span class="chip" id="chipF">Female 0 / 3</span><span class="hint" style="align-self:center">Each team needs exactly 3 male and 3 female members.</span></div>
+        <div class="members" id="members"></div>
+        <div class="row" style="margin-top:16px"><button class="btn" id="submitBtn" type="submit">Submit registration</button><span class="hint" id="submitNote"></span></div>
+      </form>
+    </div>
+
+    <div id="s-done" hidden></div>
+  </section>
+
+  <!-- ROSTER -->
+  <section id="v-roster" class="panel" hidden>
+    <h2>Teams and members</h2>
+    <div class="groups" id="rosterStats"></div>
+    <div class="row"><label for="rosterFilter" style="margin:0">Show</label>
+      <select id="rosterFilter" style="max-width:240px"><option value="all">All groups</option><option value="office">Support Team</option><option value="plant1">Plant 1</option><option value="plant2">Plant 2</option></select></div>
+    <div class="tablewrap"><table><thead><tr><th>Team</th><th>Team name</th><th>#</th><th>Badge ID</th><th>Name (per NRIC)</th><th>Dept code</th><th>Gender</th></tr></thead><tbody id="rosterBody"></tbody></table></div>
+    <div id="rosterEmpty" class="hint" hidden>No teams registered yet.</div>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="v-admin" class="panel" hidden>
+    <h2>Admin</h2>
+    <form id="adminLogin" class="login" novalidate><div><label for="adminKey">Admin key</label><input id="adminKey" type="password" autocomplete="off"><div class="err" id="adminErr"></div></div><button class="btn" type="submit">Unlock</button></form>
+    <div id="adminTools" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="row"><button class="btn" id="exportBtn">Export to Excel</button><span class="hint" id="exportNote"></span></div>
+    <div class="tablewrap"><table><thead><tr><th>Team</th><th>Team name</th><th>Registered by</th><th>Registered at</th><th></th></tr></thead><tbody id="adminBody"></tbody></table></div></div>
+  </section>
+</div>
+
+<script>
+(function(){
+const CONFIG={
+  DEADLINE:new Date('2026-12-10T23:59:59+08:00'), // due date 10/12 (system date compared)
+  DOMAIN:'wiwynn.com',
+  TOTAL:34,
+  GROUPS:{
+    office:{code:'SUP',name:'Support Team',cap:6},
+    plant1:{code:'P1',name:'Plant 1',cap:14},
+    plant2:{code:'P2',name:'Plant 2',cap:14}
+  }
+};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const fmtDT=iso=>{try{return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return iso}};
+
+let isAdmin=false,adminKey='';
+let teams=[],loaded=false,session=null,selGroup=null;
+/* ---------- backend (Supabase) : replaces the old Node server, same behaviour ---------- */
+const SUPABASE_URL='https://YOUR-PROJECT-ID.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlYnFia3d2d2NuYWdnc2Vzb3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU1MTM2NjMsImV4cCI6MjExMTA4OTY2M30.8NI5uaUA1bal4U9f7UIyWEG_ANWkNtd9pWzfRYiUyyM';
+async function rpc(fn,args){
+  const h={'Content-Type':'application/json',apikey:SUPABASE_KEY};
+  if(SUPABASE_KEY.startsWith('eyJ'))h.Authorization='Bearer '+SUPABASE_KEY;
+  const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(args||{})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw Object.assign(new Error('Server error'),{status:r.status,data:{}});
+  const st=j._status||200; delete j._status;
+  if(st>=400)throw Object.assign(new Error(j.error||'Error'),{status:st,data:j});
+  return j;
+}
+async function api(path,opts={}){
+  const h=opts.headers||{}, b=opts.body?JSON.parse(opts.body):{}, m=opts.method||'GET';
+  if(path==='/api/teams'&&m==='GET')return rpc('api_teams');
+  if(path==='/api/login')return rpc('api_login',{badge:b.badge});
+  if(path==='/api/register')return rpc('api_register',{d:b});
+  if(path==='/api/admin/check')return rpc('api_admin_check',{key:h['x-admin-key']});
+  if(path==='/api/admin/export')return rpc('api_admin_export',{key:h['x-admin-key']});
+  const del=path.match(/^\/api\/teams\/([A-Z0-9-]+)$/);
+  if(del&&m==='DELETE')return rpc('api_admin_delete',{key:h['x-admin-key'],tid:del[1]});
+  throw Object.assign(new Error('Not found'),{status:404,data:{}});
+}
+function loadScript(src){return new Promise((ok,no)=>{const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=no;document.head.appendChild(e)})}
+async function buildXlsx(info){
+  if(!window.ExcelJS)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js');
+  const wb=new ExcelJS.Workbook(), G=info.groups, ORDER=Object.keys(G), list=info.teams;
+  const head=ws=>{ws.getRow(1).font={bold:true,color:{argb:'FFFFFFFF'}};ws.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F4FD8'}};ws.views=[{state:'frozen',ySplit:1}]};
+  const s=wb.addWorksheet('Summary');
+  s.columns=[{header:'Group',width:18},{header:'Capacity',width:12},{header:'Registered',width:12},{header:'Remaining',width:12}];
+  for(const k of ORDER){const g=G[k],u=list.filter(t=>t.group===k).length;s.addRow([g.name,g.cap,u,g.cap-u])}
+  s.addRow(['Total',info.total,list.length,info.total-list.length]).font={bold:true};head(s);
+  const t=wb.addWorksheet('Teams');
+  t.columns=['Team ID','Group','Team name','Male','Female','Registered by','Registered at'].map((h,i)=>({header:h,width:[10,16,26,8,8,16,22][i]}));
+  const m=wb.addWorksheet('Members');
+  m.columns=['Team ID','Group','Team name','Member #','Badge ID','Name (per NRIC)','Dept code','Gender'].map((h,i)=>({header:h,width:[10,16,26,10,14,34,12,10][i]}));
+  for(const x of list){
+    t.addRow([x.teamId,G[x.group].name,x.teamName,x.members.filter(a=>a.gender==='M').length,x.members.filter(a=>a.gender==='F').length,x.registeredBy,new Date(x.createdAt).toLocaleString('en-GB')]);
+    x.members.forEach((a,i)=>m.addRow([x.teamId,G[x.group].name,x.teamName,i+1,a.badge,a.name,a.dept,a.gender==='M'?'Male':'Female']));
+  }
+  head(t);head(m);
+  return new Blob([await wb.xlsx.writeBuffer()],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+async function refresh(){
+  try{const j=await api('/api/teams');teams=j.teams;loaded=true;$('#dbwarn').hidden=true;
+    if(!$('#s-group').hidden)renderGroups(); if(!$('#s-form').hidden)updateSlotInfo();
+    if(!$('#v-roster').hidden)renderRoster(); if(!$('#v-admin').hidden&&isAdmin)renderAdmin();
+  }catch(e){const w=$('#dbwarn');w.textContent='Cannot reach the registration server. Check your network and refresh the page.';w.hidden=false}
+}
+const closed=()=>new Date()>CONFIG.DEADLINE;
+
+/* ---------- header ---------- */
+(function(){
+  const ms=CONFIG.DEADLINE-new Date();
+  $('#countdown').textContent=ms<=0?'(closed)':'(' + Math.ceil(ms/864e5)+' days left)';
+})();
+
+/* ---------- tabs ---------- */
+function showTab(t){
+  for(const k of ['reg','roster','admin']){
+    $('#v-'+k).hidden=k!==t; $('#tab-'+k).setAttribute('aria-selected',k===t);
+  }
+  if(t==='roster')renderRoster(); if(t==='admin')renderAdmin();
+}
+['reg','roster','admin'].forEach(k=>$('#tab-'+k).onclick=()=>showTab(k));
+
+/* ---------- data helpers ---------- */
+const groupTeams=g=>teams.filter(t=>t.group===g);
+const left=g=>CONFIG.GROUPS[g].cap-groupTeams(g).length;
+const totalLeft=()=>CONFIG.TOTAL-teams.length;
+function findRegistered(list,id){
+  for(const t of list) for(const m of t.members){
+    if(m.badge===id)return t;
+  } return null;
+}
+function normId(raw){
+  const b=raw.trim().toUpperCase();
+  if(!b)return{err:'Enter your Badge ID.'};
+  if(!/^[A-Z0-9_-]{3,20}$/.test(b))return{err:'Badge ID must be 3 to 20 letters, digits, - or _.'};
+  return{type:'badge',value:b};
+}
+
+/* ---------- steps ---------- */
+function setStep(n){
+  const names=['Log in','Choose group','Team details','Done'];
+  $('#steps').innerHTML=names.map((x,i)=>`<span class="${i===n?'on':i<n?'done':''}">${i+1}. ${x}</span>`).join('');
+  $('#s-login').hidden=n!==0&&!(n===-1);
+  $('#s-group').hidden=n!==1; $('#s-form').hidden=n!==2; $('#s-done').hidden=n!==3;
+  $('#s-blocked').hidden=n!==-1; $('#s-login').hidden=!(n===0);
+}
+
+/* ---------- login ---------- */
+$('#loginForm').addEventListener('submit',async e=>{
+  e.preventDefault(); $('#loginErr').textContent=''; $('#loginId').classList.remove('bad');
+  const r=normId($('#loginId').value);
+  if(r.err){$('#loginErr').textContent=r.err;$('#loginId').classList.add('bad');return}
+  if(closed()){showClosed();return}
+  $('#loginBtn').disabled=true;
+  try{
+    await refresh();
+    const j=await api('/api/login',{method:'POST',body:JSON.stringify({badge:r.value})});
+    session={type:'badge',value:r.value,token:j.token};
+    enterGroupStep();
+  }catch(err){
+    if(err.status===409&&err.data.team){$('#loginErr').textContent='This ID is already registered in a team and cannot log in to register again.';$('#loginId').classList.add('bad');showBlocked(err.data.team,r.value)}
+    else if(err.status===403)showClosed();
+    else{$('#loginErr').textContent=err.message||'Could not check registration. Try again.';$('#loginId').classList.add('bad')}
+  }finally{$('#loginBtn').disabled=false}
+});
+function showClosed(){
+  $('#s-blocked').innerHTML=`<div class="alert"><b>Registration is closed.</b><br>The due date was 10 Dec 2026. You can still view the teams in the Teams and members tab.</div>`;
+  setStep(-1);
+}
+function teamTable(t){
+  return `<div class="tablewrap"><table><thead><tr><th>#</th><th>Badge ID</th><th>Name</th><th>Dept code</th><th>Gender</th></tr></thead><tbody>${t.members.map((m,i)=>`<tr><td>${i+1}</td><td>${esc(m.badge)}</td><td>${esc(m.name)}</td><td>${esc(m.dept)}</td><td class="g-${m.gender}">${m.gender==='M'?'Male':'Female'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function showBlocked(t,id){
+  $('#s-blocked').innerHTML=`<div class="alert" role="alert"><b>Error: registration blocked.</b><br>${esc(id)} is already registered in team ${esc(t.teamId)} (${esc(t.teamName)}). Each participant can join one team only, so this ID cannot be used to register again.</div>
+  <h3>${esc(CONFIG.GROUPS[t.group].name)} · Team ${esc(t.teamId)} · ${esc(t.teamName)}</h3>${teamTable(t)}
+  <div><button class="btn ghost" id="blkBack">Use a different ID</button></div>`;
+  setStep(-1); try{sessionStorage.removeItem('bst-login')}catch(_){}; $('#blkBack').onclick=()=>{setStep(0);$('#loginId').value=''};
+}
+$('#logout').onclick=()=>{session=null;try{sessionStorage.removeItem('bst-login')}catch(_){};setStep(0)};
+
+/* ---------- group step ---------- */
+function enterGroupStep(){
+  selGroup=null; $('#toForm').disabled=true; $('#groupErr').textContent='';
+  $('#whoami').textContent='Logged in as '+session.value;
+  setStep(1); renderGroups();
+}
+function renderGroups(){
+  const used=teams.length;
+  $('#totalTxt').textContent=`${used} / ${CONFIG.TOTAL} teams registered`;
+  $('#totalBar').style.width=(used/CONFIG.TOTAL*100)+'%';
+  $('#totalFull').hidden=totalLeft()>0;
+  $('#groups').innerHTML=Object.entries(CONFIG.GROUPS).map(([k,g])=>{
+    const l=left(k), u=groupTeams(k).length, full=l<=0||totalLeft()<=0;
+    return `<button class="gcard" data-g="${k}" aria-pressed="${selGroup===k}" ${full?'disabled':''}>
+      <h3>${g.name}</h3><div class="num">${u}<small> / ${g.cap}</small></div>
+      <div class="meter"><i style="width:${u/g.cap*100}%"></i></div>
+      <span class="pill ${full?'full':''}">${full?'Full':l+' slot'+(l>1?'s':'')+' left'}</span></button>`}).join('');
+  document.querySelectorAll('.gcard').forEach(b=>b.onclick=()=>{selGroup=b.dataset.g;$('#toForm').disabled=false;$('#groupErr').textContent='';renderGroups()});
+  if(selGroup&&(left(selGroup)<=0||totalLeft()<=0)){selGroup=null;$('#toForm').disabled=true;$('#groupErr').textContent='That group just filled up. Pick another group.'}
+}
+$('#toForm').onclick=()=>{
+  if(!selGroup)return;
+  if(totalLeft()<=0||left(selGroup)<=0){$('#groupErr').textContent='No slots left in this group.';renderGroups();return}
+  buildForm(); setStep(2);
+};
+$('#backGroup').onclick=()=>{setStep(1);renderGroups()};
+
+/* ---------- form ---------- */
+function updateSlotInfo(){
+  if(!selGroup)return;
+  const g=CONFIG.GROUPS[selGroup];
+  $('#formTitle').textContent=g.name+' team details';
+  $('#slotInfo').textContent=`${left(selGroup)} of ${g.cap} slots left in ${g.name}. ${totalLeft()} of ${CONFIG.TOTAL} slots left overall. Slots are checked again when you submit.`;
+}
+function buildForm(){
+  updateSlotInfo(); $('#errBox').hidden=true; $('#teamName').value=''; $('#teamName').classList.remove('bad');
+  let h='';
+  for(let i=1;i<=6;i++){
+    const me=i===1, lockB=me;
+    h+=`<div class="mcard" data-i="${i}"><h3>Member ${i}${me?' <span class="pill">You</span>':''}</h3>
+      <div><label for="b${i}">Badge ID</label><input id="b${i}" autocomplete="off" ${lockB?'readonly value="'+esc(session.value)+'"':''}><div class="err" id="eb${i}"></div></div>
+      <div><label for="d${i}">Dept code</label><input id="d${i}" autocomplete="off" maxlength="12"><div class="err" id="ed${i}"></div></div>
+      <div class="full"><label for="n${i}">Name (as per NRIC)</label><input id="n${i}" autocomplete="off"><div class="err" id="en${i}"></div></div>
+      <div class="full"><label for="g${i}">Gender</label><select id="g${i}"><option value="">Select</option><option value="M">Male</option><option value="F">Female</option></select><div class="err" id="eg${i}"></div></div>
+      </div>`;
+  }
+  $('#members').innerHTML=h;
+  for(let i=1;i<=6;i++)$('#g'+i).onchange=updateTally;
+  updateTally();
+}
+function updateTally(){
+  let m=0,f=0;
+  for(let i=1;i<=6;i++){const v=$('#g'+i)?.value;if(v==='M')m++;if(v==='F')f++}
+  const set=(el,n,l)=>{el.textContent=`${l} ${n} / 3`;el.className='chip '+(n===3?'ok':n>3?'over':'')};
+  set($('#chipM'),m,'Male');set($('#chipF'),f,'Female');
+}
+function collect(){
+  const errs=[],fe={};
+  const mark=(k,msg)=>{fe[k]=msg};
+  const tn=$('#teamName').value.trim();
+  if(tn.length<3)mark('teamName','Enter a team name (3 to 30 characters).');
+  else if(teams.some(t=>t.teamName.trim().toLowerCase()===tn.toLowerCase()))mark('teamName','This team name is already taken. Choose another.');
+  const ms=[];
+  for(let i=1;i<=6;i++){
+    const m={badge:$('#b'+i).value.trim().toUpperCase(),dept:$('#d'+i).value.trim().toUpperCase(),name:$('#n'+i).value.trim().replace(/\s+/g,' ').toUpperCase(),gender:$('#g'+i).value};
+    if(!/^[A-Z0-9_-]{3,20}$/.test(m.badge))mark('b'+i,'Badge ID is required (3 to 20 letters or digits).');
+    if(!/^[A-Z0-9_-]{2,12}$/.test(m.dept))mark('d'+i,'Dept code is required.');
+    if(m.name.length<3)mark('n'+i,'Name as per NRIC is required.');
+    if(!m.gender)mark('g'+i,'Select gender.');
+    ms.push(m);
+  }
+  // duplicates inside the form
+  for(const key of ['badge']){
+    const seen={};
+    ms.forEach((m,i)=>{ if(!m[key])return; if(seen[m[key]]!==undefined){const c=key==='badge'?'b':'e';mark(c+(i+1),'Duplicate in this team (same as member '+(seen[m[key]]+1)+').')}else seen[m[key]]=i });
+  }
+  // the logged-in person must be member 1 (fields are locked, re-check anyway)
+  if(session.type==='badge'&&ms[0].badge!==session.value)mark('b1','Member 1 must be you.');
+    const M=ms.filter(m=>m.gender==='M').length,F=ms.filter(m=>m.gender==='F').length;
+  const allPicked=ms.every(m=>m.gender);
+  if(allPicked&&(M!==3||F!==3))errs.push(`Gender check failed: this team has ${M} male and ${F} female. Each team needs exactly 3 male and 3 female members.`);
+  return{tn,ms,fe,errs,M,F};
+}
+function showErrors(c){
+  document.querySelectorAll('#teamForm .err').forEach(e=>e.textContent='');
+  document.querySelectorAll('#teamForm .bad').forEach(e=>e.classList.remove('bad'));
+  for(const[k,msg]of Object.entries(c.fe)){
+    const id=k==='teamName'?'teamNameErr':'e'+k; const input=$('#'+(k==='teamName'?'teamName':k));
+    if($('#'+id))$('#'+id).textContent=msg; if(input)input.classList.add('bad');
+  }
+  const list=[...c.errs];
+  const n=Object.keys(c.fe).length; if(n)list.unshift(`${n} field${n>1?'s need':' needs'} attention. All fields are mandatory.`);
+  showBox(list);
+}
+function showBox(list){
+  const b=$('#errBox'); if(!list.length){b.hidden=true;return}
+  b.innerHTML=list.length===1?esc(list[0]):'<b>Please fix the following:</b><ul>'+list.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>';
+  b.hidden=false; b.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* ---------- submit (the server re-checks everything) ---------- */
+$('#teamForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(closed()){showBox(['Registration closed on 10 Dec 2026.']);return}
+  const c=collect();
+  if(Object.keys(c.fe).length||c.errs.length){showErrors(c);return}
+  showErrors(c);
+  $('#submitBtn').disabled=true; $('#submitNote').textContent='Saving…';
+  try{
+    const j=await api('/api/register',{method:'POST',body:JSON.stringify({token:session.token,group:selGroup,teamName:c.tn,members:c.ms})});
+    await refresh(); showDone(j.team);
+  }catch(err){
+    const d=err.data||{};
+    showBox(d.errors||[err.message||'Could not save your registration. Try again.']);
+    await refresh();
+    if(d.relogin){setTimeout(()=>setStep(0),1800)}
+    else if(d.back){setTimeout(()=>{setStep(1);renderGroups()},1800)}
+  }finally{$('#submitBtn').disabled=false;$('#submitNote').textContent=''}
+});
+function showDone(t){
+  $('#s-done').innerHTML=`<div class="ticket"><span class="pill" style="width:max-content">Registered</span><div class="tid">${esc(t.teamId)}</div>
+    <h3>${esc(t.teamName)} · ${esc(CONFIG.GROUPS[t.group].name)}</h3>
+    <div class="hint">See you at Daiman Bowl, Taman Johor Jaya on 13 Dec 2026. Roll, connect, strike together.</div></div>${teamTable(t)}
+    <div class="hint">Your team members can no longer register again because their IDs are already used.</div>
+    <div><button class="btn ghost" id="doneRoster">View all teams</button></div>`;
+  setStep(3); $('#doneRoster').onclick=()=>showTab('roster'); window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- roster ---------- */
+function renderRoster(){
+  $('#rosterStats').innerHTML=Object.entries(CONFIG.GROUPS).map(([k,g])=>{
+    const u=groupTeams(k).length;
+    return `<div class="gcard" style="cursor:default"><h3>${g.name}</h3><div class="num">${u}<small> / ${g.cap}</small></div><div class="meter"><i style="width:${u/g.cap*100}%"></i></div></div>`}).join('');
+  const f=$('#rosterFilter').value;
+  const order=['office','plant1','plant2'];
+  const list=teams.filter(t=>f==='all'||t.group===f).sort((a,b)=>order.indexOf(a.group)-order.indexOf(b.group)||a.slot-b.slot);
+  $('#rosterEmpty').hidden=list.length>0;
+  $('#rosterBody').innerHTML=list.map(t=>t.members.map((m,i)=>`<tr class="${i===0?'teamstart':''}"><td class="tn">${i===0?esc(t.teamId):''}</td><td>${i===0?esc(t.teamName):''}</td><td>${i+1}</td><td>${esc(m.badge)}</td><td>${esc(m.name)}</td><td>${esc(m.dept)}</td><td class="g-${m.gender}">${m.gender==='M'?'Male':'Female'}</td></tr>`).join('')).join('');
+}
+$('#rosterFilter').onchange=renderRoster;
+
+/* ---------- admin ---------- */
+let delArm=null;
+function renderAdmin(){
+  $('#adminLogin').hidden=isAdmin; $('#adminTools').hidden=!isAdmin;
+  if(!isAdmin)return;
+  const list=teams;
+  $('#adminBody').innerHTML=list.map(t=>`<tr><td class="tn">${esc(t.teamId)}</td><td>${esc(t.teamName)}</td><td>${esc(t.registeredBy)}</td><td>${esc(fmtDT(t.createdAt))}</td><td><button class="btn ${delArm===t.teamId?'danger':'ghost'}" style="padding:6px 12px;font-size:13px" data-del="${esc(t.teamId)}">${delArm===t.teamId?'Confirm delete':'Delete'}</button></td></tr>`).join('')||'<tr><td colspan="5" class="hint">No teams yet.</td></tr>';
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.del; if(delArm!==id){delArm=id;renderAdmin();return}
+    try{await api('/api/teams/'+id,{method:'DELETE',headers:{'x-admin-key':adminKey}});delArm=null;await refresh()}catch(e){$('#exportNote').textContent='Delete failed.'}
+  });
+}
+$('#adminLogin').addEventListener('submit',async e=>{
+  e.preventDefault(); const k=$('#adminKey').value;
+  try{await api('/api/admin/check',{headers:{'x-admin-key':k}});adminKey=k;isAdmin=true;$('#adminErr').textContent='';renderAdmin()}
+  catch(_){$('#adminErr').textContent='Wrong admin key.'}
+});
+$('#exportBtn').onclick=async()=>{
+  const note=$('#exportNote'); note.textContent='';
+  try{
+    const info=await api('/api/admin/export',{headers:{'x-admin-key':adminKey}});
+    const url=URL.createObjectURL(await buildXlsx(info)); const a=document.createElement('a');
+    a.href=url;a.download='Bowling_Strike_2026_Registrations.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+    note.textContent='Exported.';
+  }catch(e){note.textContent='Export failed.'}
+};
+
+/* ---------- boot ---------- */
+setStep(0); renderRoster(); refresh(); setInterval(refresh,8000);
+if(closed())showClosed();
+})();
+</script>
+</body></html>
