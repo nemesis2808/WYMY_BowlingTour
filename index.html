@@ -180,7 +180,7 @@ const fmtDT=iso=>{try{return new Date(iso).toLocaleString('en-GB',{day:'2-digit'
 let isAdmin=false,adminKey='';
 let teams=[],loaded=false,session=null,selGroup=null;
 /* ---------- backend (Supabase) : replaces the old Node server, same behaviour ---------- */
-const SUPABASE_URL='https://YOUR-PROJECT-ID.supabase.co';
+const SUPABASE_URL='https://tebqbkwvwcnaggsesosw.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlYnFia3d2d2NuYWdnc2Vzb3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU1MTM2NjMsImV4cCI6MjExMTA4OTY2M30.8NI5uaUA1bal4U9f7UIyWEG_ANWkNtd9pWzfRYiUyyM';
 async function rpc(fn,args){
   const h={'Content-Type':'application/json',apikey:SUPABASE_KEY};
